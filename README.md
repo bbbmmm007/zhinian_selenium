@@ -32,6 +32,7 @@ create table spider_db.job_info
 );
 ```
 本项目是基于selenium和pyecharts，对智联招聘的IT互联网的招聘数据，实现自动抓取和可视化
+以省和直辖市为单位进行抓取。
 
 
 
