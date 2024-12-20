@@ -10,6 +10,6 @@ class expMap:
             return "1年以下"
         return exp
 
-bm = "1-3年"
-result=expMap.map_exp(bm)
-print(result)
+# bm = "1-3年"
+# result=expMap.map_exp(bm)
+# print(result)

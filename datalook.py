@@ -1,3 +1,4 @@
+
 import pymysql
 import pandas as pd
 from pyecharts import options as opts
@@ -7,7 +8,7 @@ conn = pymysql.connect(
     host="localhost",       # 数据库地址
     user="root",            # 数据库用户名
     password="623163",      # 数据库密码
-    database="spider_db"    # 数据库名称
+    database="data_analysis"    # 数据库名称
 )
 # 直接用 pandas 从 MySQL 读取数据
 query = "SELECT * FROM job_info"  # 替换为你的 SQL 查询语句
@@ -17,14 +18,31 @@ df = pd.read_sql(query, conn)
 conn.close()
 from DataMap.salary_map import SalaryMap
 
-output_path = "D:/MuMuwork/GitCangKu/bosszp-selenium/VisualResult/Chart/"
 #进行数据映射
 from DataMap.experience_map import expMap
 from DataMap.education_map import educationMap
-
 from DataMap.add_map import MapChina
 
 df_data = df.copy()
+
+
+# print(df_data.columns)
+# 行业字段预处理
+industry_data = df_data["job_industry"]
+industry_list = []
+for s_i in industry_data:
+    industry_list.append(s_i)
+
+# 技术字段预处理
+skills_data = df_data["job_skills"]
+skills_list = []
+for s_k in skills_data:
+    skills_list.append(s_k)
+
+#词云生成
+from Tool.wordCloudCreateTool import WordCloudCreate
+wordCloud_ind = WordCloudCreate(industry_list, output_file="VisualResult/WordCloud/industryWordCloud.html")
+wordCloud_ski = WordCloudCreate(skills_list, output_file="VisualResult/WordCloud/skillWordCloud.html")
 
 #城市映射
 location_list=df_data["job_location"]
@@ -67,10 +85,11 @@ for s_i in experience_list:
 df_data.loc[:, "job_experience"] = experience_dict
 
 #数据分析初分组
+grouped_salary = df_data.groupby(['job_salary_range']).size().reset_index(name='count')
 grouped_salary_by_location = df_data.groupby(['job_salary_range','job_location']).size().reset_index(name='count')
 grouped_salary_by_education = df_data.groupby(['job_salary_range','job_education']).size().reset_index(name='count')
 grouped_salary_by_experience = df_data.groupby(['job_salary_range','job_experience']).size().reset_index(name='count')
-
+print(grouped_salary)
 
 
 #薪资与经验的可视化分析
@@ -95,6 +114,58 @@ pivoted['job_salary_range'] = pd.Categorical(pivoted['job_salary_range'], catego
 pivoted = pivoted.sort_values(by='job_salary_range')
 
 
+from Tool.colorByDataDivide import colorByDataDivide
+#统计各个类别的数量
+province_counts=df_data["province"].value_counts()
+
+province_data = [(province, count) for province, count in province_counts.items()]
+
+# 填充省份数据（没有数据的省份填充为0）
+province_dict = {province: 0 for province in MapChina.get_all_provinces()}  # 初始化所有省份为 0
+for province, count in province_data:
+    mapped_province = MapChina.get_province_name(province)  # 映射省份名称
+    if mapped_province in province_dict:
+        province_dict[mapped_province] = count  # 填充有数据的省份
+# 将省份数据转换为 pyecharts 可用的格式
+formatted_data = [[province, province_dict[province]] for province in province_dict]
+# 转换为数据框
+df_data = pd.DataFrame(province_data, columns=['province', 'count'])
+# 提取数值部分
+province_values = df_data['count'].tolist()
+pieces = colorByDataDivide.auto_generate_pieces(province_values)
+
+
+from pyecharts.charts import Map
+
+# 绘制可视化地图
+c = (
+    Map()
+    .add("BOSS直聘计算机相关招聘信息概况", formatted_data, "china")  # 将数据传入 "china" 地图
+    .set_global_opts(
+        title_opts=opts.TitleOpts(title="BOSS直聘计算机相关岗位数量分布"),
+        visualmap_opts=opts.VisualMapOpts(
+            max_=max(province_dict.values()),  # 动态设置最大值
+            is_piecewise=True,
+            pieces=pieces,# 设置为分段显示
+            range_text=["高", "低"]            # 显示文本
+        ),
+        tooltip_opts=opts.TooltipOpts(
+            trigger="item",             # 鼠标悬停显示项
+            formatter="{b}: {c}"         # 格式化显示省份和对应的数值
+        )
+    )
+    .set_series_opts(
+        label_opts=opts.LabelOpts(is_show=True, formatter="{c}"),  # 显示数值
+        itemstyle_opts=opts.ItemStyleOpts(color="#69c0ff")          # 自定义颜色
+    )
+    .render(path='VisualResult/Chart/chinaMap.html')  # 渲染为 HTML 文件
+)
+
+
+
+
+
+
 
 # 创建 pyecharts 图表
 c_i = (
@@ -115,8 +186,13 @@ c_i = (
         datazoom_opts=[opts.DataZoomOpts(orient="vertical"),opts.DataZoomOpts(orient="horizontal")] # 添加横纵数据调节
 
     )
-    .render(output_path+"salary_by_experience.html")  # 输出文件
+    .render(path='VisualResult/Chart/salaryByex.html')  # 输出文件
 )
+
+
+
+
+
 
 # 创建 DataFrame
 df_education = pd.DataFrame(grouped_salary_by_education)
@@ -141,7 +217,7 @@ c_e = (
     Bar()
     .add_xaxis(pivoted['job_salary_range'].tolist())  # 薪资段作为 X 轴
     .add_yaxis(series_name="学历不限", y_axis=pivoted['学历不限'].tolist())
-    .add_yaxis(series_name="高中", y_axis=pivoted['高中'].tolist())
+    # .add_yaxis(series_name="高中", y_axis=pivoted['高中'].tolist())
     .add_yaxis(series_name="大专", y_axis=pivoted['大专'].tolist())
     .add_yaxis(series_name="本科", y_axis=pivoted['本科'].tolist())
     .add_yaxis(series_name="硕士", y_axis=pivoted['硕士'].tolist())
@@ -152,7 +228,7 @@ c_e = (
         legend_opts=opts.LegendOpts(pos_top="5%"),  # 设置图例位置
         datazoom_opts=[opts.DataZoomOpts(orient="vertical"),opts.DataZoomOpts(orient="horizontal")] # 添加横纵数据调节
     )
-    .render(output_path+"salary_by_education.html")  # 输出文件
+    .render(path='VisualResult/Chart/salaryByed.html')   # 输出文件
 )
 
 # 创建 DataFrame
@@ -188,5 +264,5 @@ c_l = (
         legend_opts=opts.LegendOpts(pos_top="5%"),  # 设置图例位置
         datazoom_opts=[opts.DataZoomOpts(orient="vertical"),opts.DataZoomOpts(orient="horizontal")] # 添加横纵数据调节
     )
-    .render(output_path+"salary_by_location.html")  # 输出文件
+    .render(path='VisualResult/Chart/salaryBylo.html')  # 输出文件
 )
