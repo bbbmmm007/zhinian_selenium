@@ -31,8 +31,9 @@ create table data_analysis.job_info
     create_time      varchar(50)  null comment '抓取时间'
 );
 ```
+
+```
 本项目是基于selenium和pyecharts，对智联招聘的IT互联网的招聘数据，实现自动抓取和可视化
-<<<<<<< HEAD
 项目结构
 zhilian_selenium_pyecharts
   ---DataMap                            # 数据映射工具文件夹
@@ -40,7 +41,7 @@ zhilian_selenium_pyecharts
      ---education_map.py                # 学历字段处理
      ---experience_map.py               # 经验字段处理
      ---salary_map.py                   # 薪水字段处理
-=======
+
 以省和直辖市为单位进行抓取.
 
   ---Tool                               # 工具文件夹
@@ -55,6 +56,7 @@ zhilian_selenium_pyecharts
   ---zhinian_selenlum.py                # 抓取数据代码
   ---datalook.py                        # 数据可视化 py
   ---requirements.txt                   # 需要的包
+```
 
 部分效果展示
 ![](C:\Users\TY\Pictures\Screenshots\抓取效果.png)
@@ -63,7 +65,6 @@ zhilian_selenium_pyecharts
 ![](C:\Users\TY\Pictures\Screenshots\3333.png)
 
 常见报错情况
-![](C:\Users\TY\Pictures\Screenshots\报错情况 1 .png)
 ![](C:\Users\TY\Pictures\Screenshots\报错情况2.png)
 一般在这两种报错情况下，多运行几次就能解决
 ![](C:\Users\TY\Pictures\Screenshots\成功.png)
