@@ -32,6 +32,7 @@ create table data_analysis.job_info
 );
 ```
 本项目是基于selenium和pyecharts，对智联招聘的IT互联网的招聘数据，实现自动抓取和可视化
+<<<<<<< HEAD
 项目结构
 zhilian_selenium_pyecharts
   ---DataMap                            # 数据映射工具文件夹
@@ -39,6 +40,8 @@ zhilian_selenium_pyecharts
      ---education_map.py                # 学历字段处理
      ---experience_map.py               # 经验字段处理
      ---salary_map.py                   # 薪水字段处理
+=======
+以省和直辖市为单位进行抓取.
 
   ---Tool                               # 工具文件夹
      ---colorByDataDivide.py            # 进行在地图上展示的数量于颜色的划分处理
@@ -71,7 +74,6 @@ zhilian_selenium_pyecharts
 all_province注释掉那个省份，防止抓取到重复的数据。
 在连接数据库时，记得更换为自己的账号和密码，还有需要注意爬取网站时切勿使用其他浏览器打开网址。失败就是多重试几次
 声明：
-     本项目，只提供学习借鉴，切勿其他用途。与作者无关。
-
+     本项目，只提供学习借鉴，切勿其他用途。
 如果对你有帮助麻烦点个start,
 
