@@ -55,7 +55,7 @@ print(f"{len(job_len_list)}个分类")
 for i in range(5,len(job_len_list)):
     time.sleep(5)
     current_a = wait.until(
-        EC.visibility_of_element_located((By.XPATH, f'//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/div/div[1]/a[{i}]'))
+        EC.element_to_be_clickable((By.XPATH, f'//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/div/div[1]/a[{i}]'))
     )
     current_category = current_a.find_element(by=By.XPATH, value='//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/div/h4').text
     sub_category = current_a.text  # 子分类
@@ -64,6 +64,7 @@ for i in range(5,len(job_len_list)):
     # 使用 ActionChains 模拟鼠标点击
     actions = ActionChains(browser)
     actions.move_to_element(current_a).click().perform()
+
     # 等待新窗口打开
     wait.until(lambda driver: len(driver.window_handles) > 1)
     print("{}正在抓取{}--{}".format(today, current_category, sub_category))  # 打印当前抓取的信息
@@ -76,15 +77,16 @@ for i in range(5,len(job_len_list)):
     # 获取当前页面中的所有职位信息（这里只是获取一次初始页面的，后续翻页会重新获取）
     job_detail = browser.find_elements(by=By.XPATH, value='/html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div')
     job_page = browser.find_elements(by=By.XPATH, value='//*[@id="positionList-hook"]/div/div[2]/div[2]/div/a')
-    job_len = len(job_page) - 2
-    print(f"该分类职位有{job_len}页")
+    print(f"该分类职位有{len(job_page) - 2}页")
     # 遍历所有省份
     for province in MapChina.all_province:
         #//*[@id="filter-hook"]/div/div[2]/div[1]/div[1]/img
         print(province)
         time.sleep(2)
         # 再次加载
+        job_page = browser.find_elements(by=By.XPATH, value='//*[@id="positionList-hook"]/div/div[2]/div[2]/div/a')
         job_detail = browser.find_elements(by=By.XPATH, value='/html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div')
+
         # 点击地点选择按钮并输入省份
         add_select_but = wait.until(
             EC.element_to_be_clickable((By.XPATH, '//*[@id="filter-hook"]/div/div[2]/div/div[1]/img'))
@@ -109,14 +111,14 @@ for i in range(5,len(job_len_list)):
 
 
         # 新增循环用于翻页操作，从第1页开始（因为初始已经在第1页获取过信息了），直到超过job_len页数
-        for page in range(1, job_len + 1):
+        for page in range(1, len(job_page) - 1):
             time.sleep(3)
 
             # 获取当前页面中的所有职位信息（每次翻页后都要重新获取）
             job_detail = browser.find_elements(by=By.XPATH,
                                                value='/html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div')
 
-            print(f"正在抓取{province}第{page}/{job_len}页")
+            print(f"正在抓取{province}第{page}/{len(job_page) - 2}页")
             # 遍历每个职位，提取相关信息
             for j in range(1, len(job_detail) + 1):
                 db = DBUtils('localhost', 'root', '623163', 'data_analysis')
@@ -280,7 +282,7 @@ for i in range(5,len(job_len_list)):
                 db.close()
 
             # 判断是否是最后一页，如果不是则点击下一页按钮
-            if page < job_len:
+            if page < (len(job_page) - 2):
                 try:
                     next_page_button = wait.until(
                         EC.presence_of_element_located((By.LINK_TEXT, '下一页'))
@@ -308,7 +310,8 @@ for i in range(5,len(job_len_list)):
                     continue  # 如果超时，则结束翻页循环
     # 返回到首页进行下一个分类抓取
     try:
-         # 退回到首页
+
+        # 退回到首页
         browser.back()
         # 模拟点击 互联网/AI 展示出岗位分类
         show_ele = browser.find_element(by=By.XPATH, value='//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/a')
