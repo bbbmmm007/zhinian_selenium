@@ -1,7 +1,9 @@
 
+
 import pymysql
 import pandas as pd
 from pyecharts import options as opts
+from pyecharts.charts import Bar
 
 # 连接到 MySQL 数据库
 conn = pymysql.connect(
@@ -14,8 +16,7 @@ conn = pymysql.connect(
 query = "SELECT * FROM job_info"  # 替换为你的 SQL 查询语句
 df = pd.read_sql(query, conn)
 
-# 关闭连接
-conn.close()
+
 from DataMap.salary_map import SalaryMap
 
 #进行数据映射
@@ -28,22 +29,29 @@ df_data = df.copy()
 
 # print(df_data.columns)
 # 行业字段预处理
-industry_data = df_data["job_industry"]
-industry_list = []
-for s_i in industry_data:
-    industry_list.append(s_i)
+# industry_data = df_data["job_industry"]
+# industry_list = []
+# for s_i in industry_data:
+#     industry_list.append(s_i)
+#
+# # 技术字段预处理
+# skills_data = df_data["job_skills"]
+# skills_list = []
+# for s_k in skills_data:
+#     skills_list.append(s_k)
+#
+# #词云生成
+# from Tool.wordCloudCreateTool import WordCloudCreate
+# wordCloud_ind = WordCloudCreate(industry_list, output_file="VisualResult/WordCloud/industryWordCloud.html")
+# wordCloud_ski = WordCloudCreate(skills_list, output_file="VisualResult/WordCloud/skillWordCloud.html")
 
-# 技术字段预处理
-skills_data = df_data["job_skills"]
-skills_list = []
-for s_k in skills_data:
-    skills_list.append(s_k)
-
-#词云生成
-from Tool.wordCloudCreateTool import WordCloudCreate
-wordCloud_ind = WordCloudCreate(industry_list, output_file="VisualResult/WordCloud/industryWordCloud.html")
-wordCloud_ski = WordCloudCreate(skills_list, output_file="VisualResult/WordCloud/skillWordCloud.html")
-
+#通过城市实现省份初步映射
+first_city_list = df_data["job_location"]
+result_city_dict = []
+for city in first_city_list:
+    city_s = MapChina.get_province_by_city(city)
+    result_city_dict.append(city_s)
+df_data.loc[:, "province"] = result_city_dict
 #城市映射
 location_list=df_data["job_location"]
 result_location_dict = []
@@ -51,22 +59,6 @@ for s_l in location_list:
     s_category = MapChina.get_city_tier(s_l)
     result_location_dict.append(s_category)
 df_data.loc[:, "job_location"] = result_location_dict
-
-#薪水映射
-salary_list = df_data["job_salary_range"]
-result_salary_dict = []
-for s_s in salary_list:
-    s_category = SalaryMap.salaryMap(s_s)
-    result_salary_dict.append(s_category)
-df_data.loc[:, "job_salary_range"] = result_salary_dict
-
-#省份映射
-province_list = df_data["province"]
-result_province_dict = []
-for s_p in province_list:
-    s_category = MapChina.get_province_name(s_p)
-    result_province_dict.append(s_category)
-df_data.loc[:, "province"] = result_province_dict
 
 #学历映射
 education_list = df_data["job_education"]
@@ -76,6 +68,29 @@ for s_e in education_list:
     education_dict.append(s_category)
 df_data.loc[:, "job_education"] = education_dict
 
+#薪水映射
+salary_list = df_data["job_salary_range"]
+result_salary_dict = []
+# 初始化结果列表
+# 遍历每行数据，根据薪水范围和学历进行映射
+for s_s, s_e in zip(salary_list, education_list):
+    # 调用SalaryMap进行映射
+    s_category = SalaryMap.salaryMap(s_s, s_e)
+    result_salary_dict.append(s_category)
+
+# 确保长度一致后，更新数据框中的"job_salary_range"列
+df_data["job_salary_range"] = result_salary_dict
+
+#省份矫正映射
+province_list = df_data["province"]
+result_province_dict = []
+for s_p in province_list:
+    s_category = MapChina.get_province_name(s_p)
+    result_province_dict.append(s_category)
+df_data.loc[:, "province"] = result_province_dict
+
+
+
 #经验映射
 experience_list = df_data["job_experience"]
 experience_dict = []
@@ -83,13 +98,135 @@ for s_i in experience_list:
     s_category = expMap.map_exp(s_i)
     experience_dict.append(s_category)
 df_data.loc[:, "job_experience"] = experience_dict
-
-#数据分析初分组
+#
+# #数据分析初分组
 grouped_salary = df_data.groupby(['job_salary_range']).size().reset_index(name='count')
 grouped_salary_by_location = df_data.groupby(['job_salary_range','job_location']).size().reset_index(name='count')
 grouped_salary_by_education = df_data.groupby(['job_salary_range','job_education']).size().reset_index(name='count')
 grouped_salary_by_experience = df_data.groupby(['job_salary_range','job_experience']).size().reset_index(name='count')
-print(grouped_salary)
+# print(grouped_salary)
+grouped_salary_by_province = df_data.groupby(['job_salary_range',"province"]).size().reset_index(name='count')
+# print(grouped_salary_by_province)
+grouped_salary_by_sub_category = df_data.groupby(['job_salary_range',"sub_category"]).size().reset_index(name='count')
+# print(grouped_salary_by_sub_category)
+#绘制职位在中国地图分布情况
+# from Tool.colorByDataDivide import colorByDataDivide
+# #统计各个类别的数量
+# province_counts=df_data["province"].value_counts()
+#
+# province_data = [(province, count) for province, count in province_counts.items()]
+#
+# # 填充省份数据（没有数据的省份填充为0）
+# province_dict = {province: 0 for province in MapChina.get_all_provinces()}  # 初始化所有省份为 0
+# for province, count in province_data:
+#     mapped_province = MapChina.get_province_name(province)  # 映射省份名称
+#     if mapped_province in province_dict:
+#         province_dict[mapped_province] = count  # 填充有数据的省份
+# # 将省份数据转换为 pyecharts 可用的格式
+# formatted_data = [[province, province_dict[province]] for province in province_dict]
+# # 转换为数据框
+# df_data = pd.DataFrame(province_data, columns=['province', 'count'])
+# # 提取数值部分
+# province_values = df_data['count'].tolist()
+# pieces = colorByDataDivide.auto_generate_pieces(province_values)
+#
+#
+# from pyecharts.charts import Map
+#
+# # 绘制可视化地图
+# c = (
+#     Map()
+#     .add("BOSS直聘计算机相关招聘信息概况", formatted_data, "china")  # 将数据传入 "china" 地图
+#     .set_global_opts(
+#         title_opts=opts.TitleOpts(title="BOSS直聘计算机相关岗位数量分布"),
+#         visualmap_opts=opts.VisualMapOpts(
+#             max_=max(province_dict.values()),  # 动态设置最大值
+#             is_piecewise=True,
+#             pieces=pieces,# 设置为分段显示
+#             range_text=["高", "低"]            # 显示文本
+#         ),
+#         tooltip_opts=opts.TooltipOpts(
+#             trigger="item",             # 鼠标悬停显示项
+#             formatter="{b}: {c}"         # 格式化显示省份和对应的数值
+#         )
+#     )
+#     .set_series_opts(
+#         label_opts=opts.LabelOpts(is_show=True, formatter="{c}"),  # 显示数值
+#         itemstyle_opts=opts.ItemStyleOpts(color="#69c0ff")          # 自定义颜色
+#     )
+#     .render(path='VisualResult/Chart/chinaMap.html')  # 渲染为 HTML 文件
+# )
+
+
+
+#绘制省份与薪资的图
+# 创建 DataFrame
+df_pr = pd.DataFrame(grouped_salary_by_province)
+
+# 按薪资段和城市类型分组，并求每组的人数总和
+grouped = df_pr.groupby(['job_salary_range', 'province'], as_index=False)['count'].sum()
+
+# 重塑数据，将城市类型变为列
+pivoted = grouped.pivot(index='province', columns='job_salary_range', values='count').reset_index()
+# print(pivoted)
+# 创建 pyecharts 图表
+c_l = (
+    Bar()
+    .add_xaxis(pivoted['province'].tolist())  # 薪资段作为 X 轴
+    .add_yaxis(series_name="5k以下", y_axis=pivoted['5k以下'].tolist())
+    .add_yaxis(series_name="5k-7k", y_axis=pivoted['5k-7k'].tolist())
+    .add_yaxis(series_name="7k-9k", y_axis=pivoted['7k-9k'].tolist())
+    .add_yaxis(series_name="9k-12k", y_axis=pivoted['9k-12k'].tolist())
+    .add_yaxis(series_name="12k-15k", y_axis=pivoted['12k-15k'].tolist())
+    .add_yaxis(series_name="15k-18k", y_axis=pivoted['15k-18k'].tolist())
+    .add_yaxis(series_name="18k-20k", y_axis=pivoted['18k-20k'].tolist())
+    .add_yaxis(series_name="20k以上", y_axis=pivoted['20k以上'].tolist())
+    .set_global_opts(
+        title_opts=opts.TitleOpts(title="各省份薪资段人数统计"),
+        xaxis_opts=opts.AxisOpts(type_="category", name="省份"),
+        yaxis_opts=opts.AxisOpts(name="人数"),
+        legend_opts=opts.LegendOpts(pos_top="5%"),  # 设置图例位置
+        datazoom_opts=[opts.DataZoomOpts(orient="vertical"),opts.DataZoomOpts(orient="horizontal")] # 添加横纵数据调节
+    )
+    .render(path='VisualResult/Chart/salaryBypr.html')  # 输出文件
+)
+
+
+
+
+# #绘制薪资与职业分类的图
+# # 创建 DataFrame
+df_sub = pd.DataFrame(grouped_salary_by_sub_category)
+
+# 按薪资段和城市类型分组，并求每组的人数总和
+grouped = df_sub.groupby(['job_salary_range', 'sub_category'], as_index=False)['count'].sum()
+
+# 重塑数据，将城市类型变为列
+pivoted = grouped.pivot(index='sub_category', columns='job_salary_range', values='count').reset_index()
+# print(pivoted)
+# 创建 pyecharts 图表
+c_l = (
+    Bar()
+    #横轴的属性
+    .add_xaxis(pivoted['sub_category'].tolist())  # 薪资段作为 X 轴
+    .add_yaxis(series_name="5k以下", y_axis=pivoted['5k以下'].tolist())
+    .add_yaxis(series_name="5k-7k", y_axis=pivoted['5k-7k'].tolist())
+    .add_yaxis(series_name="7k-9k", y_axis=pivoted['7k-9k'].tolist())
+    .add_yaxis(series_name="9k-12k", y_axis=pivoted['9k-12k'].tolist())
+    .add_yaxis(series_name="12k-15k", y_axis=pivoted['12k-15k'].tolist())
+    .add_yaxis(series_name="15k-18k", y_axis=pivoted['15k-18k'].tolist())
+    .add_yaxis(series_name="18k-20k", y_axis=pivoted['18k-20k'].tolist())
+    .add_yaxis(series_name="20k以上", y_axis=pivoted['20k以上'].tolist())
+    .set_global_opts(
+        title_opts=opts.TitleOpts(title="各职类份薪资段人数统计"),
+        xaxis_opts=opts.AxisOpts(type_="category", name="职类"),
+        yaxis_opts=opts.AxisOpts(name="人数"),
+        legend_opts=opts.LegendOpts(pos_top="5%"),  # 设置图例位置
+        datazoom_opts=[opts.DataZoomOpts(orient="vertical"),opts.DataZoomOpts(orient="horizontal")] # 添加横纵数据调节
+    )
+    .render(path='VisualResult/Chart/salaryBysu.html')  # 输出文件
+)
+
 
 
 #薪资与经验的可视化分析
@@ -113,60 +250,6 @@ experience_order = ["在校/应届", "1年以下", "1-3年", "3-5年", "5-10年"
 pivoted['job_salary_range'] = pd.Categorical(pivoted['job_salary_range'], categories=salary_order, ordered=True)
 pivoted = pivoted.sort_values(by='job_salary_range')
 
-
-from Tool.colorByDataDivide import colorByDataDivide
-#统计各个类别的数量
-province_counts=df_data["province"].value_counts()
-
-province_data = [(province, count) for province, count in province_counts.items()]
-
-# 填充省份数据（没有数据的省份填充为0）
-province_dict = {province: 0 for province in MapChina.get_all_provinces()}  # 初始化所有省份为 0
-for province, count in province_data:
-    mapped_province = MapChina.get_province_name(province)  # 映射省份名称
-    if mapped_province in province_dict:
-        province_dict[mapped_province] = count  # 填充有数据的省份
-# 将省份数据转换为 pyecharts 可用的格式
-formatted_data = [[province, province_dict[province]] for province in province_dict]
-# 转换为数据框
-df_data = pd.DataFrame(province_data, columns=['province', 'count'])
-# 提取数值部分
-province_values = df_data['count'].tolist()
-pieces = colorByDataDivide.auto_generate_pieces(province_values)
-
-
-from pyecharts.charts import Map
-
-# 绘制可视化地图
-c = (
-    Map()
-    .add("BOSS直聘计算机相关招聘信息概况", formatted_data, "china")  # 将数据传入 "china" 地图
-    .set_global_opts(
-        title_opts=opts.TitleOpts(title="BOSS直聘计算机相关岗位数量分布"),
-        visualmap_opts=opts.VisualMapOpts(
-            max_=max(province_dict.values()),  # 动态设置最大值
-            is_piecewise=True,
-            pieces=pieces,# 设置为分段显示
-            range_text=["高", "低"]            # 显示文本
-        ),
-        tooltip_opts=opts.TooltipOpts(
-            trigger="item",             # 鼠标悬停显示项
-            formatter="{b}: {c}"         # 格式化显示省份和对应的数值
-        )
-    )
-    .set_series_opts(
-        label_opts=opts.LabelOpts(is_show=True, formatter="{c}"),  # 显示数值
-        itemstyle_opts=opts.ItemStyleOpts(color="#69c0ff")          # 自定义颜色
-    )
-    .render(path='VisualResult/Chart/chinaMap.html')  # 渲染为 HTML 文件
-)
-
-
-
-
-
-
-
 # 创建 pyecharts 图表
 c_i = (
     Bar()
@@ -189,11 +272,11 @@ c_i = (
     .render(path='VisualResult/Chart/salaryByex.html')  # 输出文件
 )
 
-
-
-
-
-
+#
+#
+#
+#
+#绘制学历和薪资的可视化
 # 创建 DataFrame
 df_education = pd.DataFrame(grouped_salary_by_education)
 
@@ -216,11 +299,14 @@ pivoted = pivoted.sort_values(by='job_salary_range')
 c_e = (
     Bar()
     .add_xaxis(pivoted['job_salary_range'].tolist())  # 薪资段作为 X 轴
+    .add_yaxis(series_name="中专/中技", y_axis=pivoted['中专/中技'].tolist())
+    .add_yaxis(series_name="高中", y_axis=pivoted['高中'].tolist())
     .add_yaxis(series_name="学历不限", y_axis=pivoted['学历不限'].tolist())
-    # .add_yaxis(series_name="高中", y_axis=pivoted['高中'].tolist())
     .add_yaxis(series_name="大专", y_axis=pivoted['大专'].tolist())
     .add_yaxis(series_name="本科", y_axis=pivoted['本科'].tolist())
     .add_yaxis(series_name="硕士", y_axis=pivoted['硕士'].tolist())
+    .add_yaxis(series_name="博士", y_axis=pivoted['博士'].tolist())
+
     .set_global_opts(
         title_opts=opts.TitleOpts(title="各学历薪资段人数统计"),
         xaxis_opts=opts.AxisOpts(type_="category", name="薪资段"),

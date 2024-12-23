@@ -13,27 +13,27 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from DataMap.add_map import MapChina
 from dbtool import DBUtils
-# # 定义多个 User-Agent
-# user_agents = [
-#     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-#     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/92.0",
-#     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/91.0.864.48",
-#     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36"
-# ]
-#
-# user_agent = random.choice(user_agents)
+# 定义多个 User-Agent
+user_agents = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/92.0",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Edge/91.0.864.48",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Safari/537.36"
+]
+
+user_agent = random.choice(user_agents)
 # 打开首页
 index_url = 'http://www.zhaopin.com/'
 
 
 edge_options = Options()
 edge_options.add_argument("--start-maximized")
-# edge_options.add_argument(f'user-agent={user_agent}')
+edge_options.add_argument(f'user-agent={user_agent}')
 # 启动 Microsoft Edge 浏览器
 
 browser = webdriver.Edge(options=edge_options)
 browser.get(index_url)
-wait = WebDriverWait(browser, 15)  # 等待最长15秒
+wait = WebDriverWait(browser, 10)  # 等待最长15秒
 
 # 等待直到浏览器跳转到目标 URL
 # wait.until(
@@ -52,11 +52,14 @@ job_len_list = browser.find_elements(by=By.XPATH, value='//*[@id="root"]/main/di
 print(f"{len(job_len_list)}个分类")
 
 # 遍历职位分类，进行职位信息抓取
-for i in range(5,len(job_len_list)):
+for i in range(len(job_len_list)):
     time.sleep(5)
-    current_a = wait.until(
-        EC.element_to_be_clickable((By.XPATH, f'//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/div/div[1]/a[{i}]'))
-    )
+    #理论上下面的这个方法应该好一点但是容易报错
+    # current_a = wait.until(
+    #     EC.element_to_be_clickable((By.XPATH, f'//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/div/div[1]/a[{i}]'))
+    # )
+
+    current_a = browser.find_elements(By.XPATH,'//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/div/div[1]/a')[i]
     current_category = current_a.find_element(by=By.XPATH, value='//*[@id="root"]/main/div[1]/div[1]/ol/li[1]/nav/div/h4').text
     sub_category = current_a.text  # 子分类
 
@@ -71,6 +74,8 @@ for i in range(5,len(job_len_list)):
 
     # 获取所有窗口句柄
     window_handles = browser.window_handles
+    # 关闭原来窗口
+    browser.close()
     browser.switch_to.window(window_handles[-1])  # 切换到最后打开的窗口
     print("页面跳转成功，当前 URL:", browser.current_url)
 
@@ -81,9 +86,8 @@ for i in range(5,len(job_len_list)):
     # 遍历所有省份
     for province in MapChina.all_province:
         #//*[@id="filter-hook"]/div/div[2]/div[1]/div[1]/img
-        print(province)
-        time.sleep(2)
         # 再次加载
+        time.sleep(2)
         job_page = browser.find_elements(by=By.XPATH, value='//*[@id="positionList-hook"]/div/div[2]/div[2]/div/a')
         job_detail = browser.find_elements(by=By.XPATH, value='/html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div')
 
@@ -106,19 +110,34 @@ for i in range(5,len(job_len_list)):
         time.sleep(2)
         for li in li_elements:
             if li.text.strip() == target_text:
-                li.click()
+                # 使用显式等待确保元素可点击
+                wait.until(EC.element_to_be_clickable(li))
+                # 滚动元素到可视区域（如果它被其他元素遮挡）
+                browser.execute_script("arguments[0].scrollIntoView(true);", li)
+                # 等待目标元素可点击
+                wait.until(EC.element_to_be_clickable(li))
+                # 模拟点击
+                browser.execute_script("arguments[0].click();", li)
                 break  # 找到目标文本后退出循环
 
-
+        # 模拟刷新页面
+        browser.refresh()
+        # 选择智能匹配
+        match_type_but = wait.until(
+            EC.element_to_be_clickable((By.XPATH,'//*[@id="root"]/div[4]/div[2]/div[1]/ul/li[1]/a'))
+        )
+        match_type_but.click()
         # 新增循环用于翻页操作，从第1页开始（因为初始已经在第1页获取过信息了），直到超过job_len页数
-        for page in range(1, len(job_page) - 1):
-            time.sleep(3)
+        for page in range(len(job_page) - 1):
+
+            #固定翻页后等待时间
+            time.sleep(2)
 
             # 获取当前页面中的所有职位信息（每次翻页后都要重新获取）
             job_detail = browser.find_elements(by=By.XPATH,
                                                value='/html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div')
 
-            print(f"正在抓取{province}第{page}/{len(job_page) - 2}页")
+            print(f"正在抓取{province}第{page+1}/{len(job_page) - 2}页")
             # 遍历每个职位，提取相关信息
             for j in range(1, len(job_detail) + 1):
                 db = DBUtils('localhost', 'root', '623163', 'data_analysis')
@@ -247,7 +266,8 @@ for i in range(5,len(job_len_list)):
                 # 获取技能要求（若无则标记为“无”）                                                                     /html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div[1]/div[1]/div[1]/div[2]/div[1]
                 try:
                     data_skills = ','.join([skill.text.strip() for skill in browser.find_elements(by=By.XPATH,
-                                                                                                 value=f'/html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div[{j}]/div[1]/div[1]/div[2]/div')])
+                     value=f'/html/body/div[1]/div[4]/div[2]/div[2]/div/div[1]/div[{j}]/div[1]/div[1]/div[2]/div')])
+                    # 匹配技能要求如果没有英文
                     if not re.search(r'[a-zA-Z]', data_skills):
                         job_skills = '无'
                     else:
@@ -259,10 +279,7 @@ for i in range(5,len(job_len_list)):
                 # 确定职位所在的省份
                 province = ''
                 city = job_location.split('·')[0]  # 提取城市名（从工作地点字符串中分离）
-                for p, cities in MapChina.city_map.items():  # 遍历城市映射，查找匹配的省份
-                    if city in cities:
-                        province = p
-                        break
+                province = MapChina.get_province_by_city(city)
 
                 # 打印抓取的职位信息
                 print(f"{j}/{len(job_detail)}", current_category, sub_category, job_title, province, job_location,

@@ -28,7 +28,7 @@ class MapChina:
         "辽宁": ["营口", "铁岭", "沈阳", "盘锦", "辽阳", "锦州", "葫芦岛", "阜新", "抚顺", "丹东", "大连", "朝阳",
                  "本溪",
                  "鞍山"],
-        "江西": ["鹰潭", "宜春", "上饶", "萍乡", "南昌", "景德镇", "吉安", "抚州", "新余", "九江", "赣州"],
+        "江西": ["江西","鹰潭", "宜春", "上饶", "萍乡", "南昌", "景德镇", "吉安", "抚州", "新余", "九江", "赣州"],
         "黑龙江": ["伊春", "七台河", "牡丹江", "鸡西", "黑河", "鹤岗", "哈尔滨", "大兴安岭", "绥化", "双鸭山",
                    "齐齐哈尔",
                    "佳木斯", "大庆"],
@@ -97,10 +97,11 @@ class MapChina:
     }
     # 获取所有省份通用名称，用于爬取数据时输入地区
     all_province = [
-         #"北京","上海","天津","重庆","西藏","宁夏","广西",
-    #      "内蒙古", "新疆","河北", "河南", "云南", "辽宁", "黑龙江","湖南",
-    #     "安徽","江苏","江西","山东", "贵州", "广东", "甘肃", "山西","陕西","吉林","福建", "湖北", "浙江",
-    #     "海南", "河南", "四川",
+        "北京","上海","天津","重庆",
+        "西藏","宁夏","广西",
+        "内蒙古", "新疆","河北", "河南", "云南", "辽宁", "黑龙江","湖南",
+        "安徽","江苏","江西","山东", "贵州", "广东", "甘肃", "山西","陕西","吉林","福建", "湖北", "浙江",
+        "海南", "河南", "四川",
         "青海"
     ]
     # 获取所有省份的名称
@@ -174,3 +175,27 @@ class MapChina:
         :return: 标准化的省份名称列表
         """
         return MapChina.all_provinces
+    #通过城市映射省份
+    @staticmethod
+    def get_province_by_city(city):
+        if '·' in city:
+            city = city.split('·')[0]
+            city = city.replace('市','')
+            for p, cities in MapChina.city_map.items():  # 遍历城市映射，查找匹配的省份
+                if city in cities:
+                    province = p
+                    return province
+        else:
+            for p, cities in MapChina.city_map.items():  # 遍历城市映射，查找匹配的省份
+                if city in cities:
+                    province = p
+                    return province
+
+
+# # 添加新的城市名称（xx市）
+# for province, cities in MapChina.city_map.items():
+#     # 为每个城市名称添加 "市"
+#     updated_cities = [city + "市" for city in cities]
+#     MapChina.city_map[province] = updated_cities
+#
+# print(MapChina.city_map)

@@ -6,30 +6,37 @@ pip install -r requirements.txt
 ```
 **创建数据库和表**
 ```sql
-drop database if exists data_analysis;
-create database if not exists data_analysis;
-       
-use data_analysis;
+-- 删除现有数据库并重新创建
+DROP DATABASE IF EXISTS data_analysis;
+CREATE DATABASE IF NOT EXISTS data_analysis;
 
-drop table if exists job_info;
-create table data_analysis.job_info
+-- 使用数据库
+USE data_analysis;
+
+-- 删除现有表并重新创建
+DROP TABLE IF EXISTS job_info;
+
+-- 创建表并设置字符集和排序规则
+CREATE TABLE data_analysis.job_info
 (
-    category         varchar(255) null comment '一级分类',
-    sub_category     varchar(255) null comment '二级分类',
-    job_title        varchar(255) null comment '岗位名称',
-    province         varchar(100) null comment '省份',
-    job_location     varchar(255) null comment '工作位置',
-    job_company      varchar(255) null comment '企业名称',
-    job_industry     varchar(255) null comment '行业类型',
-    job_finance      varchar(255) null comment '融资情况',
-    job_tpye         varchar(255) null comment '企业类型',
-    job_scale        varchar(255) null comment '企业规模',
-    job_salary_range varchar(255) null comment '薪资范围',
-    job_experience   varchar(255) null comment '工作年限',
-    job_education    varchar(255) null comment '学历要求',
-    job_skills       varchar(255) null comment '技能要求',
-    create_time      varchar(50)  null comment '抓取时间'
-);
+    category         VARCHAR(255) NULL COMMENT '一级分类',
+    sub_category     VARCHAR(255) NULL COMMENT '二级分类',
+    job_title        VARCHAR(255) NULL COMMENT '岗位名称',
+    province         VARCHAR(100) NULL COMMENT '省份',
+    job_location     VARCHAR(255) NULL COMMENT '工作位置',
+    job_company      VARCHAR(255) NULL COMMENT '企业名称',
+    job_industry     VARCHAR(255) NULL COMMENT '行业类型',
+    job_finance      VARCHAR(255) NULL COMMENT '融资情况',
+    job_tpye         VARCHAR(255) NULL COMMENT '企业类型',
+    job_scale        VARCHAR(255) NULL COMMENT '企业规模',
+    job_salary_range VARCHAR(255) NULL COMMENT '薪资范围',
+    job_experience   VARCHAR(255) NULL COMMENT '工作年限',
+    job_education    VARCHAR(255) NULL COMMENT '学历要求',
+    job_skills       VARCHAR(255) NULL COMMENT '技能要求',
+    create_time      VARCHAR(50)  NULL COMMENT '抓取时间'
+)
+CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;  -- 设置字符集和排序规则
+
 ```
 
 ```

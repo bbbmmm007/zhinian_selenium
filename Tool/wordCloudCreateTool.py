@@ -81,6 +81,8 @@ class WordCloudCreate:
         # 去掉多余的逗号和空字符
         text = re.sub(r'[,，\s]+', ',', text.strip())
 
+        text = text.replace('无','')
+
         return text
 
     def tokenize_data(self):
