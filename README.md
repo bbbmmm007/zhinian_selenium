@@ -41,6 +41,7 @@ CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;  -- 设置字符集和排序�
 
 ```
 本项目是基于selenium和pyecharts，对智联招聘的IT互联网的招聘数据，实现自动抓取和可视化
+包括对抓取到的数据进行清洗和格式化
 项目结构
 zhilian_selenium_pyecharts
   ---DataMap                            # 数据映射工具文件夹
@@ -81,6 +82,8 @@ zhilian_selenium_pyecharts
 然后你可以记住到爬取到哪个地区出错了，然后在salary_map.py文件中的
 all_province注释掉那个省份，防止抓取到重复的数据。
 在连接数据库时，记得更换为自己的账号和密码，还有需要注意爬取网站时切勿使用其他浏览器打开网址。失败就是多重试几次
+
+
 声明：
      本项目，只提供学习借鉴，切勿其他用途。
 如果对你有帮助麻烦点个start,
