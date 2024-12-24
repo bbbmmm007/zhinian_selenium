@@ -68,7 +68,7 @@ zhilian_selenium_pyecharts
 部分效果展示
 ![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/抓取效果.png)
 ![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/111.png)
-![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/2222.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/招聘概况.png)
 ![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/3333.png)
 
 常见报错情况

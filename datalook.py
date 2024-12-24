@@ -29,21 +29,21 @@ df_data = df.copy()
 
 # print(df_data.columns)
 # 行业字段预处理
-# industry_data = df_data["job_industry"]
-# industry_list = []
-# for s_i in industry_data:
-#     industry_list.append(s_i)
-#
-# # 技术字段预处理
-# skills_data = df_data["job_skills"]
-# skills_list = []
-# for s_k in skills_data:
-#     skills_list.append(s_k)
-#
-# #词云生成
-# from Tool.wordCloudCreateTool import WordCloudCreate
-# wordCloud_ind = WordCloudCreate(industry_list, output_file="VisualResult/WordCloud/industryWordCloud.html")
-# wordCloud_ski = WordCloudCreate(skills_list, output_file="VisualResult/WordCloud/skillWordCloud.html")
+industry_data = df_data["job_industry"]
+industry_list = []
+for s_i in industry_data:
+    industry_list.append(s_i)
+
+# 技术字段预处理
+skills_data = df_data["job_skills"]
+skills_list = []
+for s_k in skills_data:
+    skills_list.append(s_k)
+
+#词云生成
+from Tool.wordCloudCreateTool import WordCloudCreate
+wordCloud_ind = WordCloudCreate(industry_list, output_file="VisualResult/WordCloud/industryWordCloud.html")
+wordCloud_ski = WordCloudCreate(skills_list, output_file="VisualResult/WordCloud/skillWordCloud.html")
 
 #通过城市实现省份初步映射
 first_city_list = df_data["job_location"]
@@ -110,52 +110,52 @@ grouped_salary_by_province = df_data.groupby(['job_salary_range',"province"]).si
 grouped_salary_by_sub_category = df_data.groupby(['job_salary_range',"sub_category"]).size().reset_index(name='count')
 # print(grouped_salary_by_sub_category)
 #绘制职位在中国地图分布情况
-# from Tool.colorByDataDivide import colorByDataDivide
-# #统计各个类别的数量
-# province_counts=df_data["province"].value_counts()
-#
-# province_data = [(province, count) for province, count in province_counts.items()]
-#
-# # 填充省份数据（没有数据的省份填充为0）
-# province_dict = {province: 0 for province in MapChina.get_all_provinces()}  # 初始化所有省份为 0
-# for province, count in province_data:
-#     mapped_province = MapChina.get_province_name(province)  # 映射省份名称
-#     if mapped_province in province_dict:
-#         province_dict[mapped_province] = count  # 填充有数据的省份
-# # 将省份数据转换为 pyecharts 可用的格式
-# formatted_data = [[province, province_dict[province]] for province in province_dict]
-# # 转换为数据框
-# df_data = pd.DataFrame(province_data, columns=['province', 'count'])
-# # 提取数值部分
-# province_values = df_data['count'].tolist()
-# pieces = colorByDataDivide.auto_generate_pieces(province_values)
-#
-#
-# from pyecharts.charts import Map
-#
-# # 绘制可视化地图
-# c = (
-#     Map()
-#     .add("BOSS直聘计算机相关招聘信息概况", formatted_data, "china")  # 将数据传入 "china" 地图
-#     .set_global_opts(
-#         title_opts=opts.TitleOpts(title="BOSS直聘计算机相关岗位数量分布"),
-#         visualmap_opts=opts.VisualMapOpts(
-#             max_=max(province_dict.values()),  # 动态设置最大值
-#             is_piecewise=True,
-#             pieces=pieces,# 设置为分段显示
-#             range_text=["高", "低"]            # 显示文本
-#         ),
-#         tooltip_opts=opts.TooltipOpts(
-#             trigger="item",             # 鼠标悬停显示项
-#             formatter="{b}: {c}"         # 格式化显示省份和对应的数值
-#         )
-#     )
-#     .set_series_opts(
-#         label_opts=opts.LabelOpts(is_show=True, formatter="{c}"),  # 显示数值
-#         itemstyle_opts=opts.ItemStyleOpts(color="#69c0ff")          # 自定义颜色
-#     )
-#     .render(path='VisualResult/Chart/chinaMap.html')  # 渲染为 HTML 文件
-# )
+from Tool.colorByDataDivide import colorByDataDivide
+#统计各个类别的数量
+province_counts=df_data["province"].value_counts()
+
+province_data = [(province, count) for province, count in province_counts.items()]
+
+# 填充省份数据（没有数据的省份填充为0）
+province_dict = {province: 0 for province in MapChina.get_all_provinces()}  # 初始化所有省份为 0
+for province, count in province_data:
+    mapped_province = MapChina.get_province_name(province)  # 映射省份名称
+    if mapped_province in province_dict:
+        province_dict[mapped_province] = count  # 填充有数据的省份
+# 将省份数据转换为 pyecharts 可用的格式
+formatted_data = [[province, province_dict[province]] for province in province_dict]
+# 转换为数据框
+df_data = pd.DataFrame(province_data, columns=['province', 'count'])
+# 提取数值部分
+province_values = df_data['count'].tolist()
+pieces = colorByDataDivide.auto_generate_pieces(province_values)
+
+
+from pyecharts.charts import Map
+
+# 绘制可视化地图
+c = (
+    Map()
+    .add("智联招聘计算机相关招聘信息概况", formatted_data, "china")  # 将数据传入 "china" 地图
+    .set_global_opts(
+        title_opts=opts.TitleOpts(title="智联招聘计算机相关岗位数量分布"),
+        visualmap_opts=opts.VisualMapOpts(
+            max_=max(province_dict.values()),  # 动态设置最大值
+            is_piecewise=True,
+            pieces=pieces,# 设置为分段显示
+            range_text=["高", "低"]            # 显示文本
+        ),
+        tooltip_opts=opts.TooltipOpts(
+            trigger="item",             # 鼠标悬停显示项
+            formatter="{b}: {c}"         # 格式化显示省份和对应的数值
+        )
+    )
+    .set_series_opts(
+        label_opts=opts.LabelOpts(is_show=True, formatter="{c}"),  # 显示数值
+        itemstyle_opts=opts.ItemStyleOpts(color="#69c0ff")          # 自定义颜色
+    )
+    .render(path='VisualResult/Chart/chinaMap.html')  # 渲染为 HTML 文件
+)
 
 
 

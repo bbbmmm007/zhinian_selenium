@@ -82,6 +82,7 @@ class WordCloudCreate:
         text = re.sub(r'[,，\s]+', ',', text.strip())
 
         text = text.replace('无','')
+        text = text.replace(',','')
 
         return text
 
