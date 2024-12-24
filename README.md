@@ -66,18 +66,18 @@ zhilian_selenium_pyecharts
 ```
 
 部分效果展示
-![](C:\Users\TY\Pictures\Screenshots\抓取效果.png)
-![](C:\Users\TY\Pictures\Screenshots\111.png)
-![](C:\Users\TY\Pictures\Screenshots\2222.png)
-![](C:\Users\TY\Pictures\Screenshots\3333.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/抓取效果.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/111.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/2222.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/3333.png)
 
 常见报错情况
-![](C:\Users\TY\Pictures\Screenshots\报错情况2.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/报错情况2.png)
 一般在这两种报错情况下，多运行几次就能解决
-![](C:\Users\TY\Pictures\Screenshots\成功.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/成功.png)
 
 下面的报错情况是因为抓取的数量到了一定，也会发生报错
-![](C:\Users\TY\Pictures\Screenshots\抓取过程报错.png)
+![](https://github.com/bbbmmm007/zhinian_selenium/blob/master/VisualResult/Picture/抓取过程报错.png)
 然后你可以记住到爬取到哪个地区出错了，然后在salary_map.py文件中的
 all_province注释掉那个省份，防止抓取到重复的数据。
 在连接数据库时，记得更换为自己的账号和密码，还有需要注意爬取网站时切勿使用其他浏览器打开网址。失败就是多重试几次
